@@ -3,6 +3,10 @@ __pycache__/
 *.py[cod]
 *$py.class
 
+# add new diretorys
+site/
+download/
+
 # C extensions
 *.so
 
