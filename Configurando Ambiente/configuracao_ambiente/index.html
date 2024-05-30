@@ -786,7 +786,93 @@
 <span class="nb">cd</span><span class="w"> </span>airflow-docker
 </code></pre></div>
 <p>Dentro desse diretório, crie um arquivo <code>docker-compose.yml</code> com o seguinte conteúdo:</p>
-<div class="highlight"><pre><span></span><code><span class="nt">version</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;3&#39;</span>
+<div class="highlight"><pre><span></span><code><span class="c1"># Licensed to the Apache Software Foundation (ASF) under one</span>
+<span class="c1"># or more contributor license agreements.  See the NOTICE file</span>
+<span class="c1"># distributed with this work for additional information</span>
+<span class="c1"># regarding copyright ownership.  The ASF licenses this file</span>
+<span class="c1"># to you under the Apache License, Version 2.0 (the</span>
+<span class="c1"># &quot;License&quot;); you may not use this file except in compliance</span>
+<span class="c1"># with the License.  You may obtain a copy of the License at</span>
+<span class="c1">#</span>
+<span class="c1">#   http://www.apache.org/licenses/LICENSE-2.0</span>
+<span class="c1">#</span>
+<span class="c1"># Unless required by applicable law or agreed to in writing,</span>
+<span class="c1"># software distributed under the License is distributed on an</span>
+<span class="c1"># &quot;AS IS&quot; BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY</span>
+<span class="c1"># KIND, either express or implied.  See the License for the</span>
+<span class="c1"># specific language governing permissions and limitations</span>
+<span class="c1"># under the License.</span>
+<span class="c1">#</span>
+
+<span class="c1"># Basic Airflow cluster configuration for CeleryExecutor with Redis and PostgreSQL.</span>
+<span class="c1">#</span>
+<span class="c1"># WARNING: This configuration is for local development. Do not use it in a production deployment.</span>
+<span class="c1">#</span>
+<span class="c1"># This configuration supports basic configuration using environment variables or an .env file</span>
+<span class="c1"># The following variables are supported:</span>
+<span class="c1">#</span>
+<span class="c1"># AIRFLOW_IMAGE_NAME           - Docker image name used to run Airflow.</span>
+<span class="c1">#                                Default: apache/airflow:2.9.1</span>
+<span class="c1"># AIRFLOW_UID                  - User ID in Airflow containers</span>
+<span class="c1">#                                Default: 50000</span>
+<span class="c1"># AIRFLOW_PROJ_DIR             - Base path to which all the files will be volumed.</span>
+<span class="c1">#                                Default: .</span>
+<span class="c1"># Those configurations are useful mostly in case of standalone testing/running Airflow in test/try-out mode</span>
+<span class="c1">#</span>
+<span class="c1"># _AIRFLOW_WWW_USER_USERNAME   - Username for the administrator account (if requested).</span>
+<span class="c1">#                                Default: airflow</span>
+<span class="c1"># _AIRFLOW_WWW_USER_PASSWORD   - Password for the administrator account (if requested).</span>
+<span class="c1">#                                Default: airflow</span>
+<span class="c1"># _PIP_ADDITIONAL_REQUIREMENTS - Additional PIP requirements to add when starting all containers.</span>
+<span class="c1">#                                Use this option ONLY for quick checks. Installing requirements at container</span>
+<span class="c1">#                                startup is done EVERY TIME the service is started.</span>
+<span class="c1">#                                A better way is to build a custom image or extend the official image</span>
+<span class="c1">#                                as described in https://airflow.apache.org/docs/docker-stack/build.html.</span>
+<span class="c1">#                                Default: &#39;&#39;</span>
+<span class="c1">#</span>
+<span class="c1"># Feel free to modify this file to suit your needs.</span>
+<span class="nn">---</span>
+<span class="nt">x-airflow-common</span><span class="p">:</span>
+<span class="w">  </span><span class="nl">&amp;airflow-common</span>
+<span class="w">  </span><span class="c1"># In order to add custom dependencies or upgrade provider packages you can use your extended image.</span>
+<span class="w">  </span><span class="c1"># Comment the image line, place your Dockerfile in the directory where you placed the docker-compose.yaml</span>
+<span class="w">  </span><span class="c1"># and uncomment the &quot;build&quot; line below, Then run `docker-compose build` to build the images.</span>
+<span class="w">  </span><span class="nt">image</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">${AIRFLOW_IMAGE_NAME:-apache/airflow:2.9.1}</span>
+<span class="w">  </span><span class="c1"># build: .</span>
+<span class="w">  </span><span class="nt">environment</span><span class="p">:</span>
+<span class="w">    </span><span class="nl">&amp;airflow-common-env</span>
+<span class="w">    </span><span class="nt">AIRFLOW__CORE__EXECUTOR</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">CeleryExecutor</span>
+<span class="w">    </span><span class="nt">AIRFLOW__DATABASE__SQL_ALCHEMY_CONN</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">postgresql+psycopg2://airflow:airflow@postgres/airflow</span>
+<span class="w">    </span><span class="nt">AIRFLOW__CELERY__RESULT_BACKEND</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">db+postgresql://airflow:airflow@postgres/airflow</span>
+<span class="w">    </span><span class="nt">AIRFLOW__CELERY__BROKER_URL</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">redis://:@redis:6379/0</span>
+<span class="w">    </span><span class="nt">AIRFLOW__CORE__FERNET_KEY</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;&#39;</span>
+<span class="w">    </span><span class="nt">AIRFLOW__CORE__DAGS_ARE_PAUSED_AT_CREATION</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;true&#39;</span>
+<span class="w">    </span><span class="nt">AIRFLOW__CORE__LOAD_EXAMPLES</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;true&#39;</span>
+<span class="w">    </span><span class="nt">AIRFLOW__API__AUTH_BACKENDS</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;airflow.api.auth.backend.basic_auth,airflow.api.auth.backend.session&#39;</span>
+<span class="w">    </span><span class="c1"># yamllint disable rule:line-length</span>
+<span class="w">    </span><span class="c1"># Use simple http server on scheduler for health checks</span>
+<span class="w">    </span><span class="c1"># See https://airflow.apache.org/docs/apache-airflow/stable/administration-and-deployment/logging-monitoring/check-health.html#scheduler-health-check-server</span>
+<span class="w">    </span><span class="c1"># yamllint enable rule:line-length</span>
+<span class="w">    </span><span class="nt">AIRFLOW__SCHEDULER__ENABLE_HEALTH_CHECK</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;true&#39;</span>
+<span class="w">    </span><span class="c1"># WARNING: Use _PIP_ADDITIONAL_REQUIREMENTS option ONLY for a quick checks</span>
+<span class="w">    </span><span class="c1"># for other purpose (development, test and especially production usage) build/extend Airflow image.</span>
+<span class="w">    </span><span class="nt">_PIP_ADDITIONAL_REQUIREMENTS</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">${_PIP_ADDITIONAL_REQUIREMENTS:-}</span>
+<span class="w">    </span><span class="c1"># The following line can be used to set a custom config file, stored in the local config folder</span>
+<span class="w">    </span><span class="c1"># If you want to use it, outcomment it and replace airflow.cfg with the name of your config file</span>
+<span class="w">    </span><span class="c1"># AIRFLOW_CONFIG: &#39;/opt/airflow/config/airflow.cfg&#39;</span>
+<span class="w">  </span><span class="nt">volumes</span><span class="p">:</span>
+<span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">${AIRFLOW_PROJ_DIR:-.}/dags:/opt/airflow/dags</span>
+<span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">${AIRFLOW_PROJ_DIR:-.}/logs:/opt/airflow/logs</span>
+<span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">${AIRFLOW_PROJ_DIR:-.}/config:/opt/airflow/config</span>
+<span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">${AIRFLOW_PROJ_DIR:-.}/plugins:/opt/airflow/plugins</span>
+<span class="w">  </span><span class="nt">user</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;${AIRFLOW_UID:-50000}:0&quot;</span>
+<span class="w">  </span><span class="nt">depends_on</span><span class="p">:</span>
+<span class="w">    </span><span class="nl">&amp;airflow-common-depends-on</span>
+<span class="w">    </span><span class="nt">redis</span><span class="p">:</span>
+<span class="w">      </span><span class="nt">condition</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">service_healthy</span>
+<span class="w">    </span><span class="nt">postgres</span><span class="p">:</span>
+<span class="w">      </span><span class="nt">condition</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">service_healthy</span>
+
 <span class="nt">services</span><span class="p">:</span>
 <span class="w">  </span><span class="nt">postgres</span><span class="p">:</span>
 <span class="w">    </span><span class="nt">image</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">postgres:13</span>
@@ -794,56 +880,200 @@
 <span class="w">      </span><span class="nt">POSTGRES_USER</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">airflow</span>
 <span class="w">      </span><span class="nt">POSTGRES_PASSWORD</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">airflow</span>
 <span class="w">      </span><span class="nt">POSTGRES_DB</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">airflow</span>
-<span class="w">    </span><span class="nt">logging</span><span class="p">:</span>
-<span class="w">      </span><span class="nt">options</span><span class="p">:</span>
-<span class="w">        </span><span class="nt">max-size</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">10m</span>
-<span class="w">        </span><span class="nt">max-file</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;3&quot;</span>
-
-<span class="w">  </span><span class="nt">webserver</span><span class="p">:</span>
-<span class="w">    </span><span class="nt">image</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">apache/airflow:2.3.0</span>
-<span class="w">    </span><span class="nt">depends_on</span><span class="p">:</span>
-<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">postgres</span>
-<span class="w">    </span><span class="nt">environment</span><span class="p">:</span>
-<span class="w">      </span><span class="nt">AIRFLOW__CORE__EXECUTOR</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">LocalExecutor</span>
-<span class="w">      </span><span class="nt">AIRFLOW__CORE__SQL_ALCHEMY_CONN</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">postgresql+psycopg2://airflow:airflow@postgres/airflow</span>
-<span class="w">      </span><span class="nt">AIRFLOW__CORE__FERNET_KEY</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;$(python</span><span class="nv"> </span><span class="s">-c</span><span class="nv"> </span><span class="s">&#39;from</span><span class="nv"> </span><span class="s">cryptography.fernet</span><span class="nv"> </span><span class="s">import</span><span class="nv"> </span><span class="s">Fernet;</span><span class="nv"> </span><span class="s">print(Fernet.generate_key().decode())&#39;)&quot;</span>
-<span class="w">      </span><span class="nt">AIRFLOW__CORE__LOAD_EXAMPLES</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;True&quot;</span>
 <span class="w">    </span><span class="nt">volumes</span><span class="p">:</span>
-<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">./dags:/opt/airflow/dags</span>
-<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">./logs:/opt/airflow/logs</span>
-<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">./plugins:/opt/airflow/plugins</span>
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">postgres-db-volume:/var/lib/postgresql/data</span>
+<span class="w">    </span><span class="nt">healthcheck</span><span class="p">:</span>
+<span class="w">      </span><span class="nt">test</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="s">&quot;CMD&quot;</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="s">&quot;pg_isready&quot;</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="s">&quot;-U&quot;</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="s">&quot;airflow&quot;</span><span class="p p-Indicator">]</span>
+<span class="w">      </span><span class="nt">interval</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">10s</span>
+<span class="w">      </span><span class="nt">retries</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">5</span>
+<span class="w">      </span><span class="nt">start_period</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">5s</span>
+<span class="w">    </span><span class="nt">restart</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">always</span>
+
+<span class="w">  </span><span class="nt">redis</span><span class="p">:</span>
+<span class="w">    </span><span class="c1"># Redis is limited to 7.2-bookworm due to licencing change</span>
+<span class="w">    </span><span class="c1"># https://redis.io/blog/redis-adopts-dual-source-available-licensing/</span>
+<span class="w">    </span><span class="nt">image</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">redis:7.2-bookworm</span>
+<span class="w">    </span><span class="nt">expose</span><span class="p">:</span>
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">6379</span>
+<span class="w">    </span><span class="nt">healthcheck</span><span class="p">:</span>
+<span class="w">      </span><span class="nt">test</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="s">&quot;CMD&quot;</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="s">&quot;redis-cli&quot;</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="s">&quot;ping&quot;</span><span class="p p-Indicator">]</span>
+<span class="w">      </span><span class="nt">interval</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">10s</span>
+<span class="w">      </span><span class="nt">timeout</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">30s</span>
+<span class="w">      </span><span class="nt">retries</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">50</span>
+<span class="w">      </span><span class="nt">start_period</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">30s</span>
+<span class="w">    </span><span class="nt">restart</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">always</span>
+
+<span class="w">  </span><span class="nt">airflow-webserver</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">&lt;&lt;</span><span class="p">:</span><span class="w"> </span><span class="nv">*airflow-common</span>
+<span class="w">    </span><span class="nt">command</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">webserver</span>
 <span class="w">    </span><span class="nt">ports</span><span class="p">:</span>
 <span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="s">&quot;8080:8080&quot;</span>
-<span class="w">    </span><span class="nt">command</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">webserver</span>
 <span class="w">    </span><span class="nt">healthcheck</span><span class="p">:</span>
-<span class="w">      </span><span class="nt">test</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="s">&quot;CMD-SHELL&quot;</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="s">&quot;[</span><span class="nv"> </span><span class="s">-f</span><span class="nv"> </span><span class="s">/opt/airflow/airflow-webserver.pid</span><span class="nv"> </span><span class="s">]&quot;</span><span class="p p-Indicator">]</span>
+<span class="w">      </span><span class="nt">test</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="s">&quot;CMD&quot;</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="s">&quot;curl&quot;</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="s">&quot;--fail&quot;</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="s">&quot;http://localhost:8080/health&quot;</span><span class="p p-Indicator">]</span>
 <span class="w">      </span><span class="nt">interval</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">30s</span>
-<span class="w">      </span><span class="nt">timeout</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">30s</span>
-<span class="w">      </span><span class="nt">retries</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">3</span>
-<span class="w">    </span><span class="nt">logging</span><span class="p">:</span>
-<span class="w">      </span><span class="nt">options</span><span class="p">:</span>
-<span class="w">        </span><span class="nt">max-size</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">10m</span>
-<span class="w">        </span><span class="nt">max-file</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;3&quot;</span>
-
-<span class="w">  </span><span class="nt">scheduler</span><span class="p">:</span>
-<span class="w">    </span><span class="nt">image</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">apache/airflow:2.3.0</span>
+<span class="w">      </span><span class="nt">timeout</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">10s</span>
+<span class="w">      </span><span class="nt">retries</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">5</span>
+<span class="w">      </span><span class="nt">start_period</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">30s</span>
+<span class="w">    </span><span class="nt">restart</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">always</span>
 <span class="w">    </span><span class="nt">depends_on</span><span class="p">:</span>
-<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">webserver</span>
-<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">postgres</span>
-<span class="w">    </span><span class="nt">environment</span><span class="p">:</span>
-<span class="w">      </span><span class="nt">AIRFLOW__CORE__EXECUTOR</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">LocalExecutor</span>
-<span class="w">      </span><span class="nt">AIRFLOW__CORE__SQL_ALCHEMY_CONN</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">postgresql+psycopg2://airflow:airflow@postgres/airflow</span>
-<span class="w">      </span><span class="nt">AIRFLOW__CORE__FERNET_KEY</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;$(python</span><span class="nv"> </span><span class="s">-c</span><span class="nv"> </span><span class="s">&#39;from</span><span class="nv"> </span><span class="s">cryptography.fernet</span><span class="nv"> </span><span class="s">import</span><span class="nv"> </span><span class="s">Fernet;</span><span class="nv"> </span><span class="s">print(Fernet.generate_key().decode())&#39;)&quot;</span>
-<span class="w">      </span><span class="nt">AIRFLOW__CORE__LOAD_EXAMPLES</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;True&quot;</span>
-<span class="w">    </span><span class="nt">volumes</span><span class="p">:</span>
-<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">./dags:/opt/airflow/dags</span>
-<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">./logs:/opt/airflow/logs</span>
-<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">./plugins:/opt/airflow/plugins</span>
+<span class="w">      </span><span class="nt">&lt;&lt;</span><span class="p">:</span><span class="w"> </span><span class="nv">*airflow-common-depends-on</span>
+<span class="w">      </span><span class="nt">airflow-init</span><span class="p">:</span>
+<span class="w">        </span><span class="nt">condition</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">service_completed_successfully</span>
+
+<span class="w">  </span><span class="nt">airflow-scheduler</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">&lt;&lt;</span><span class="p">:</span><span class="w"> </span><span class="nv">*airflow-common</span>
 <span class="w">    </span><span class="nt">command</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">scheduler</span>
-<span class="w">    </span><span class="nt">logging</span><span class="p">:</span>
-<span class="w">      </span><span class="nt">options</span><span class="p">:</span>
-<span class="w">        </span><span class="nt">max-size</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">10m</span>
-<span class="w">        </span><span class="nt">max-file</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;3&quot;</span>
+<span class="w">    </span><span class="nt">healthcheck</span><span class="p">:</span>
+<span class="w">      </span><span class="nt">test</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="s">&quot;CMD&quot;</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="s">&quot;curl&quot;</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="s">&quot;--fail&quot;</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="s">&quot;http://localhost:8974/health&quot;</span><span class="p p-Indicator">]</span>
+<span class="w">      </span><span class="nt">interval</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">30s</span>
+<span class="w">      </span><span class="nt">timeout</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">10s</span>
+<span class="w">      </span><span class="nt">retries</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">5</span>
+<span class="w">      </span><span class="nt">start_period</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">30s</span>
+<span class="w">    </span><span class="nt">restart</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">always</span>
+<span class="w">    </span><span class="nt">depends_on</span><span class="p">:</span>
+<span class="w">      </span><span class="nt">&lt;&lt;</span><span class="p">:</span><span class="w"> </span><span class="nv">*airflow-common-depends-on</span>
+<span class="w">      </span><span class="nt">airflow-init</span><span class="p">:</span>
+<span class="w">        </span><span class="nt">condition</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">service_completed_successfully</span>
+
+<span class="w">  </span><span class="nt">airflow-worker</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">&lt;&lt;</span><span class="p">:</span><span class="w"> </span><span class="nv">*airflow-common</span>
+<span class="w">    </span><span class="nt">command</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">celery worker</span>
+<span class="w">    </span><span class="nt">healthcheck</span><span class="p">:</span>
+<span class="w">      </span><span class="c1"># yamllint disable rule:line-length</span>
+<span class="w">      </span><span class="nt">test</span><span class="p">:</span>
+<span class="w">        </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="s">&quot;CMD-SHELL&quot;</span>
+<span class="w">        </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="s">&#39;celery</span><span class="nv"> </span><span class="s">--app</span><span class="nv"> </span><span class="s">airflow.providers.celery.executors.celery_executor.app</span><span class="nv"> </span><span class="s">inspect</span><span class="nv"> </span><span class="s">ping</span><span class="nv"> </span><span class="s">-d</span><span class="nv"> </span><span class="s">&quot;celery@$${HOSTNAME}&quot;</span><span class="nv"> </span><span class="s">||</span><span class="nv"> </span><span class="s">celery</span><span class="nv"> </span><span class="s">--app</span><span class="nv"> </span><span class="s">airflow.executors.celery_executor.app</span><span class="nv"> </span><span class="s">inspect</span><span class="nv"> </span><span class="s">ping</span><span class="nv"> </span><span class="s">-d</span><span class="nv"> </span><span class="s">&quot;celery@$${HOSTNAME}&quot;&#39;</span>
+<span class="w">      </span><span class="nt">interval</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">30s</span>
+<span class="w">      </span><span class="nt">timeout</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">10s</span>
+<span class="w">      </span><span class="nt">retries</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">5</span>
+<span class="w">      </span><span class="nt">start_period</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">30s</span>
+<span class="w">    </span><span class="nt">environment</span><span class="p">:</span>
+<span class="w">      </span><span class="nt">&lt;&lt;</span><span class="p">:</span><span class="w"> </span><span class="nv">*airflow-common-env</span>
+<span class="w">      </span><span class="c1"># Required to handle warm shutdown of the celery workers properly</span>
+<span class="w">      </span><span class="c1"># See https://airflow.apache.org/docs/docker-stack/entrypoint.html#signal-propagation</span>
+<span class="w">      </span><span class="nt">DUMB_INIT_SETSID</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;0&quot;</span>
+<span class="w">    </span><span class="nt">restart</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">always</span>
+<span class="w">    </span><span class="nt">depends_on</span><span class="p">:</span>
+<span class="w">      </span><span class="nt">&lt;&lt;</span><span class="p">:</span><span class="w"> </span><span class="nv">*airflow-common-depends-on</span>
+<span class="w">      </span><span class="nt">airflow-init</span><span class="p">:</span>
+<span class="w">        </span><span class="nt">condition</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">service_completed_successfully</span>
+
+<span class="w">  </span><span class="nt">airflow-triggerer</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">&lt;&lt;</span><span class="p">:</span><span class="w"> </span><span class="nv">*airflow-common</span>
+<span class="w">    </span><span class="nt">command</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">triggerer</span>
+<span class="w">    </span><span class="nt">healthcheck</span><span class="p">:</span>
+<span class="w">      </span><span class="nt">test</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="s">&quot;CMD-SHELL&quot;</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="s">&#39;airflow</span><span class="nv"> </span><span class="s">jobs</span><span class="nv"> </span><span class="s">check</span><span class="nv"> </span><span class="s">--job-type</span><span class="nv"> </span><span class="s">TriggererJob</span><span class="nv"> </span><span class="s">--hostname</span><span class="nv"> </span><span class="s">&quot;$${HOSTNAME}&quot;&#39;</span><span class="p p-Indicator">]</span>
+<span class="w">      </span><span class="nt">interval</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">30s</span>
+<span class="w">      </span><span class="nt">timeout</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">10s</span>
+<span class="w">      </span><span class="nt">retries</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">5</span>
+<span class="w">      </span><span class="nt">start_period</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">30s</span>
+<span class="w">    </span><span class="nt">restart</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">always</span>
+<span class="w">    </span><span class="nt">depends_on</span><span class="p">:</span>
+<span class="w">      </span><span class="nt">&lt;&lt;</span><span class="p">:</span><span class="w"> </span><span class="nv">*airflow-common-depends-on</span>
+<span class="w">      </span><span class="nt">airflow-init</span><span class="p">:</span>
+<span class="w">        </span><span class="nt">condition</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">service_completed_successfully</span>
+
+<span class="w">  </span><span class="nt">airflow-init</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">&lt;&lt;</span><span class="p">:</span><span class="w"> </span><span class="nv">*airflow-common</span>
+<span class="w">    </span><span class="nt">entrypoint</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">/bin/bash</span>
+<span class="w">    </span><span class="c1"># yamllint disable rule:line-length</span>
+<span class="w">    </span><span class="nt">command</span><span class="p">:</span>
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">-c</span>
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="p p-Indicator">|</span>
+<span class="w">        </span><span class="no">if [[ -z &quot;${AIRFLOW_UID}&quot; ]]; then</span>
+<span class="w">          </span><span class="no">echo</span>
+<span class="w">          </span><span class="no">echo -e &quot;\033[1;33mWARNING!!!: AIRFLOW_UID not set!\e[0m&quot;</span>
+<span class="w">          </span><span class="no">echo &quot;If you are on Linux, you SHOULD follow the instructions below to set &quot;</span>
+<span class="w">          </span><span class="no">echo &quot;AIRFLOW_UID environment variable, otherwise files will be owned by root.&quot;</span>
+<span class="w">          </span><span class="no">echo &quot;For other operating systems you can get rid of the warning with manually created .env file:&quot;</span>
+<span class="w">          </span><span class="no">echo &quot;    See: https://airflow.apache.org/docs/apache-airflow/stable/howto/docker-compose/index.html#setting-the-right-airflow-user&quot;</span>
+<span class="w">          </span><span class="no">echo</span>
+<span class="w">        </span><span class="no">fi</span>
+<span class="w">        </span><span class="no">one_meg=1048576</span>
+<span class="w">        </span><span class="no">mem_available=$$(($$(getconf _PHYS_PAGES) * $$(getconf PAGE_SIZE) / one_meg))</span>
+<span class="w">        </span><span class="no">cpus_available=$$(grep -cE &#39;cpu[0-9]+&#39; /proc/stat)</span>
+<span class="w">        </span><span class="no">disk_available=$$(df / | tail -1 | awk &#39;{print $$4}&#39;)</span>
+<span class="w">        </span><span class="no">warning_resources=&quot;false&quot;</span>
+<span class="w">        </span><span class="no">if (( mem_available &lt; 4000 )) ; then</span>
+<span class="w">          </span><span class="no">echo</span>
+<span class="w">          </span><span class="no">echo -e &quot;\033[1;33mWARNING!!!: Not enough memory available for Docker.\e[0m&quot;</span>
+<span class="w">          </span><span class="no">echo &quot;At least 4GB of memory required. You have $$(numfmt --to iec $$((mem_available * one_meg)))&quot;</span>
+<span class="w">          </span><span class="no">echo</span>
+<span class="w">          </span><span class="no">warning_resources=&quot;true&quot;</span>
+<span class="w">        </span><span class="no">fi</span>
+<span class="w">        </span><span class="no">if (( cpus_available &lt; 2 )); then</span>
+<span class="w">          </span><span class="no">echo</span>
+<span class="w">          </span><span class="no">echo -e &quot;\033[1;33mWARNING!!!: Not enough CPUS available for Docker.\e[0m&quot;</span>
+<span class="w">          </span><span class="no">echo &quot;At least 2 CPUs recommended. You have $${cpus_available}&quot;</span>
+<span class="w">          </span><span class="no">echo</span>
+<span class="w">          </span><span class="no">warning_resources=&quot;true&quot;</span>
+<span class="w">        </span><span class="no">fi</span>
+<span class="w">        </span><span class="no">if (( disk_available &lt; one_meg * 10 )); then</span>
+<span class="w">          </span><span class="no">echo</span>
+<span class="w">          </span><span class="no">echo -e &quot;\033[1;33mWARNING!!!: Not enough Disk space available for Docker.\e[0m&quot;</span>
+<span class="w">          </span><span class="no">echo &quot;At least 10 GBs recommended. You have $$(numfmt --to iec $$((disk_available * 1024 )))&quot;</span>
+<span class="w">          </span><span class="no">echo</span>
+<span class="w">          </span><span class="no">warning_resources=&quot;true&quot;</span>
+<span class="w">        </span><span class="no">fi</span>
+<span class="w">        </span><span class="no">if [[ $${warning_resources} == &quot;true&quot; ]]; then</span>
+<span class="w">          </span><span class="no">echo</span>
+<span class="w">          </span><span class="no">echo -e &quot;\033[1;33mWARNING!!!: You have not enough resources to run Airflow (see above)!\e[0m&quot;</span>
+<span class="w">          </span><span class="no">echo &quot;Please follow the instructions to increase amount of resources available:&quot;</span>
+<span class="w">          </span><span class="no">echo &quot;   https://airflow.apache.org/docs/apache-airflow/stable/howto/docker-compose/index.html#before-you-begin&quot;</span>
+<span class="w">          </span><span class="no">echo</span>
+<span class="w">        </span><span class="no">fi</span>
+<span class="w">        </span><span class="no">mkdir -p /sources/logs /sources/dags /sources/plugins</span>
+<span class="w">        </span><span class="no">chown -R &quot;${AIRFLOW_UID}:0&quot; /sources/{logs,dags,plugins}</span>
+<span class="w">        </span><span class="no">exec /entrypoint airflow version</span>
+<span class="w">    </span><span class="c1"># yamllint enable rule:line-length</span>
+<span class="w">    </span><span class="nt">environment</span><span class="p">:</span>
+<span class="w">      </span><span class="nt">&lt;&lt;</span><span class="p">:</span><span class="w"> </span><span class="nv">*airflow-common-env</span>
+<span class="w">      </span><span class="nt">_AIRFLOW_DB_MIGRATE</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;true&#39;</span>
+<span class="w">      </span><span class="nt">_AIRFLOW_WWW_USER_CREATE</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;true&#39;</span>
+<span class="w">      </span><span class="nt">_AIRFLOW_WWW_USER_USERNAME</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">${_AIRFLOW_WWW_USER_USERNAME:-airflow}</span>
+<span class="w">      </span><span class="nt">_AIRFLOW_WWW_USER_PASSWORD</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">${_AIRFLOW_WWW_USER_PASSWORD:-airflow}</span>
+<span class="w">      </span><span class="nt">_PIP_ADDITIONAL_REQUIREMENTS</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;&#39;</span>
+<span class="w">    </span><span class="nt">user</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;0:0&quot;</span>
+<span class="w">    </span><span class="nt">volumes</span><span class="p">:</span>
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">${AIRFLOW_PROJ_DIR:-.}:/sources</span>
+
+<span class="w">  </span><span class="nt">airflow-cli</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">&lt;&lt;</span><span class="p">:</span><span class="w"> </span><span class="nv">*airflow-common</span>
+<span class="w">    </span><span class="nt">profiles</span><span class="p">:</span>
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">debug</span>
+<span class="w">    </span><span class="nt">environment</span><span class="p">:</span>
+<span class="w">      </span><span class="nt">&lt;&lt;</span><span class="p">:</span><span class="w"> </span><span class="nv">*airflow-common-env</span>
+<span class="w">      </span><span class="nt">CONNECTION_CHECK_MAX_COUNT</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;0&quot;</span>
+<span class="w">    </span><span class="c1"># Workaround for entrypoint issue. See: https://github.com/apache/airflow/issues/16252</span>
+<span class="w">    </span><span class="nt">command</span><span class="p">:</span>
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">bash</span>
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">-c</span>
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">airflow</span>
+
+<span class="w">  </span><span class="c1"># You can enable flower by adding &quot;--profile flower&quot; option e.g. docker-compose --profile flower up</span>
+<span class="w">  </span><span class="c1"># or by explicitly targeted on the command line e.g. docker-compose up flower.</span>
+<span class="w">  </span><span class="c1"># See: https://docs.docker.com/compose/profiles/</span>
+<span class="w">  </span><span class="nt">flower</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">&lt;&lt;</span><span class="p">:</span><span class="w"> </span><span class="nv">*airflow-common</span>
+<span class="w">    </span><span class="nt">command</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">celery flower</span>
+<span class="w">    </span><span class="nt">profiles</span><span class="p">:</span>
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">flower</span>
+<span class="w">    </span><span class="nt">ports</span><span class="p">:</span>
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="s">&quot;5555:5555&quot;</span>
+<span class="w">    </span><span class="nt">healthcheck</span><span class="p">:</span>
+<span class="w">      </span><span class="nt">test</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="s">&quot;CMD&quot;</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="s">&quot;curl&quot;</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="s">&quot;--fail&quot;</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="s">&quot;http://localhost:5555/&quot;</span><span class="p p-Indicator">]</span>
+<span class="w">      </span><span class="nt">interval</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">30s</span>
+<span class="w">      </span><span class="nt">timeout</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">10s</span>
+<span class="w">      </span><span class="nt">retries</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">5</span>
+<span class="w">      </span><span class="nt">start_period</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">30s</span>
+<span class="w">    </span><span class="nt">restart</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">always</span>
+<span class="w">    </span><span class="nt">depends_on</span><span class="p">:</span>
+<span class="w">      </span><span class="nt">&lt;&lt;</span><span class="p">:</span><span class="w"> </span><span class="nv">*airflow-common-depends-on</span>
+<span class="w">      </span><span class="nt">airflow-init</span><span class="p">:</span>
+<span class="w">        </span><span class="nt">condition</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">service_completed_successfully</span>
+
+<span class="nt">volumes</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">postgres-db-volume</span><span class="p">:</span>
 </code></pre></div>
 <p>Este arquivo define os serviços necessários para o Apache Airflow: PostgreSQL como banco de dados, o webserver e o scheduler do Airflow.</p>
 <h2 id="passo-3-iniciar-o-apache-airflow">Passo 3: Iniciar o Apache Airflow</h2>
