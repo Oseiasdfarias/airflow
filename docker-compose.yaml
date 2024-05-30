@@ -69,12 +69,12 @@ x-airflow-common: &airflow-common
     #default é 300 - 5 minutos
     AIRFLOW__SCHEDULER__DAG_DIR_LIST_INTERVAL: 20
 
-    #configuração do email
-    # AIRFLOW__SMTP__SMTP_HOST: smtp.gmail.com
-    # AIRFLOW__SMTP__SMTP_USER: seuemail@gmail.com
-    # AIRFLOW__SMTP__SMTP_PASSWORD: suasenha
-    # AIRFLOW__SMTP__SMTP_PORT: 587
-    # AIRFLOW__SMTP__MAIL_FROM: Airflow
+    # configuração do email
+    AIRFLOW__SMTP__SMTP_HOST: smtp.gmail.com
+    AIRFLOW__SMTP__SMTP_USER: oseias.dfarias@gmail.com
+    AIRFLOW__SMTP__SMTP_PASSWORD:
+    AIRFLOW__SMTP__SMTP_PORT: 587
+    AIRFLOW__SMTP__MAIL_FROM: Airflow
 
   volumes:
     - ${AIRFLOW_PROJ_DIR:-.}/dags:/opt/airflow/dags

@@ -34,9 +34,9 @@ with DAG("dag_group",
           task_id="task6",
           bash_command="sleep 5"
       )
-    
+
     task_group = TaskGroup("Task_group")
-    
+
     task7 = BashOperator(
           task_id="task7",
           bash_command="sleep 5",
