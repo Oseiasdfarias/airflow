@@ -20,7 +20,7 @@ dag = DAG("default_args",
           start_date=datetime(2024, 5, 27),
           catchup=False,
           default_view="graph",
-          tags=["processo", "pipeline"])
+          tags=["processo1", "pipeline"])
 
 task1 = BashOperator(
   task_id="task1",
